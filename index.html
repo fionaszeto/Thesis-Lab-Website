@@ -3,72 +3,951 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>PixelMask</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .game-container {
+            max-width: 800px;
+            width: 100%;
+            background: #1a1a2e;
+            border: 4px solid #4a4a6e;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            position: relative;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Mask Stability Bar */
+        .stability-bar {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #0f0f1e;
+            border: 2px solid #4a4a6e;
+        }
+
+        .heart {
+            width: 24px;
+            height: 24px;
+            background: #ff4757;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            transition: opacity 0.3s;
+        }
+
+        .heart.empty {
+            opacity: 0.2;
+            background: #666;
+        }
+
+        /* Intro Screen */
+        .intro-screen {
+            text-align: center;
+        }
+
+        .title {
+            font-size: 32px;
+            color: #ffd700;
+            text-shadow: 3px 3px 0 #000;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .pixel-button {
+            background: #4a4a6e;
+            border: 3px solid #6a6a8e;
+            color: #fff;
+            padding: 12px 24px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0 #2a2a4e;
+        }
+
+        .pixel-button:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #2a2a4e;
+        }
+
+        .pixel-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #2a2a4e;
+        }
+
+        /* Trait Selection Screen */
+        .trait-selection-screen {
+            text-align: center;
+        }
+
+        .avatar-container {
+            margin: 30px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pixel-avatar {
+            width: 64px;
+            height: 64px;
+            position: relative;
+            image-rendering: pixelated;
+        }
+
+        .avatar-head {
+            width: 48px;
+            height: 48px;
+            background: #ffdbac;
+            border: 2px solid #000;
+            border-radius: 4px;
+            margin: 0 auto 4px;
+            position: relative;
+        }
+
+        .avatar-body {
+            width: 40px;
+            height: 16px;
+            background: #4a90e2;
+            border: 2px solid #000;
+            margin: 0 auto;
+        }
+
+        .eye {
+            width: 4px;
+            height: 4px;
+            background: #000;
+            position: absolute;
+            top: 16px;
+        }
+
+        .eye.left {
+            left: 14px;
+        }
+
+        .eye.right {
+            right: 14px;
+        }
+
+        /* Trait-specific visual changes */
+        .avatar-confident .avatar-head {
+            border-width: 3px;
+            box-shadow: 0 0 0 2px #ffd700;
+        }
+
+        .avatar-confident .eyebrow {
+            width: 12px;
+            height: 3px;
+            background: #000;
+            position: absolute;
+            top: 12px;
+        }
+
+        .avatar-confident .eyebrow.left {
+            left: 10px;
+        }
+
+        .avatar-confident .eyebrow.right {
+            right: 10px;
+        }
+
+        .avatar-calm .avatar-head {
+            box-shadow: 0 0 8px 4px rgba(100, 200, 255, 0.6);
+        }
+
+        .avatar-brave .sword {
+            width: 8px;
+            height: 24px;
+            background: #ccc;
+            border: 1px solid #000;
+            position: absolute;
+            right: -12px;
+            top: 20px;
+        }
+
+        .avatar-brave .sword::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #ffd700;
+            border: 1px solid #000;
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .avatar-funny .mouth {
+            width: 16px;
+            height: 8px;
+            border: 2px solid #000;
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .trait-label {
+            font-size: 8px;
+            color: #ffd700;
+            margin-top: 10px;
+        }
+
+        .trait-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .trait-button {
+            background: #2a2a4e;
+            border: 2px solid #4a4a6e;
+            color: #fff;
+            padding: 10px 16px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            cursor: pointer;
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        .trait-button:hover {
+            background: #3a3a5e;
+            border-color: #6a6a8e;
+        }
+
+        .trait-button.selected {
+            background: #4a90e2;
+            border-color: #6ab0f2;
+            box-shadow: 0 0 8px rgba(74, 144, 226, 0.6);
+        }
+
+        /* Mirror Room Screen */
+        .mirror-room-screen {
+            text-align: center;
+        }
+
+        .mirror-room {
+            background: #0f0f1e;
+            border: 4px solid #4a4a6e;
+            padding: 30px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .mirror {
+            width: 200px;
+            height: 150px;
+            background: linear-gradient(135deg, #2a2a4e 0%, #1a1a3e 100%);
+            border: 4px solid #6a6a8e;
+            margin: 0 auto 20px;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .mirror::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 2px solid #8a8aae;
+        }
+
+        .avatar-in-mirror {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .current-sentence {
+            background: #2a2a4e;
+            border: 2px solid #4a4a6e;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 9px;
+            line-height: 1.6;
+            color: #ffd700;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .listening-indicator {
+            font-size: 8px;
+            color: #4a90e2;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .listening-indicator.active {
+            display: block;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .volume-meter {
+            width: 200px;
+            height: 8px;
+            background: #0f0f1e;
+            border: 2px solid #4a4a6e;
+            margin: 10px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: #4a90e2;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        /* Outcome Screen */
+        .outcome-screen {
+            text-align: center;
+        }
+
+        .avatar-outcome {
+            margin: 30px 0;
+        }
+
+        .avatar-cracked .avatar-head {
+            background-image: 
+                linear-gradient(45deg, transparent 48%, #000 48%, #000 52%, transparent 52%),
+                linear-gradient(-45deg, transparent 48%, #000 48%, #000 52%, transparent 52%);
+        }
+
+        .avatar-glitching {
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+
+        .avatar-stable .avatar-head {
+            box-shadow: 0 0 12px 6px rgba(100, 255, 100, 0.5);
+        }
+
+        .speech-bubble {
+            background: #2a2a4e;
+            border: 3px solid #4a4a6e;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 500px;
+            font-size: 8px;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 30px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 15px solid #4a4a6e;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 32px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 12px solid #2a2a4e;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .line-number {
+            font-size: 8px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <div class="logo">My Website</div>
-            <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-            <div class="menu-toggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </nav>
-    </header>
+    <div class="game-container">
+        <!-- Mask Stability Bar (shown on Mirror Room and Outcome screens) -->
+        <div class="stability-bar hidden" id="stability-bar">
+            <div class="heart" id="heart-0"></div>
+            <div class="heart" id="heart-1"></div>
+            <div class="heart" id="heart-2"></div>
+            <div class="heart" id="heart-3"></div>
+            <div class="heart" id="heart-4"></div>
+        </div>
 
-    <main>
-        <section id="home" class="hero">
-            <div class="hero-content">
-                <h1>Welcome to My Website</h1>
-                <p>A simple, modern website built with HTML, CSS, and JavaScript</p>
-                <button class="cta-button">Get Started</button>
+        <!-- Intro Screen -->
+        <section id="screen-intro" class="screen active">
+            <div class="intro-screen">
+                <h1 class="title">PIXELMASK</h1>
+                <p class="subtitle">Build a mask. Speak it out loud.<br>See what holds.</p>
+                <button class="pixel-button" id="btn-start">START</button>
             </div>
         </section>
 
-        <section id="about" class="about">
-            <div class="container">
-                <h2>About</h2>
-                <div class="about-content">
-                    <p>This is a simple website template that you can customize to fit your needs. It features a clean design, responsive layout, and smooth interactions.</p>
-                    <p>Feel free to modify the content, colors, and layout to make it your own!</p>
+        <!-- Trait Selection Screen -->
+        <section id="screen-trait" class="screen">
+            <div class="trait-selection-screen">
+                <h2 style="font-size: 14px; margin-bottom: 20px; color: #ffd700;">CHOOSE YOUR MASK</h2>
+                
+                <div class="avatar-container">
+                    <div class="pixel-avatar" id="avatar-preview">
+                        <div class="avatar-head">
+                            <div class="eye left"></div>
+                            <div class="eye right"></div>
+                        </div>
+                        <div class="avatar-body"></div>
+                    </div>
+                    <div class="trait-label" id="trait-label">Select a trait</div>
                 </div>
+
+                <div class="trait-options">
+                    <button class="trait-button" data-trait="Confident">CONFIDENT</button>
+                    <button class="trait-button" data-trait="Calm">CALM</button>
+                    <button class="trait-button" data-trait="Brave">BRAVE</button>
+                    <button class="trait-button" data-trait="Funny">FUNNY</button>
+                </div>
+
+                <button class="pixel-button hidden" id="btn-enter-room">ENTER MIRROR ROOM</button>
             </div>
         </section>
 
-        <section id="contact" class="contact">
-            <div class="container">
-                <h2>Contact</h2>
-                <form class="contact-form">
-                    <div class="form-group">
-                        <label for="name">Name</label>
-                        <input type="text" id="name" name="name" required>
+        <!-- Mirror Room / Speaking Screen -->
+        <section id="screen-mirror" class="screen">
+            <div class="mirror-room-screen">
+                <h2 style="font-size: 12px; margin-bottom: 15px; color: #ffd700;">MIRROR ROOM</h2>
+                
+                <div class="mirror-room">
+                    <div class="mirror">
+                        <div class="avatar-in-mirror">
+                            <div class="pixel-avatar" id="avatar-mirror">
+                                <div class="avatar-head">
+                                    <div class="eye left"></div>
+                                    <div class="eye right"></div>
+                            </div>
+                                <div class="avatar-body"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="message">Message</label>
-                        <textarea id="message" name="message" rows="5" required></textarea>
-                    </div>
-                    <button type="submit" class="submit-button">Send Message</button>
-                </form>
+                </div>
+
+                <div class="line-number" id="line-number">Line 1 of 3</div>
+                <div class="current-sentence" id="current-sentence"></div>
+                
+                <div class="volume-meter hidden" id="volume-meter">
+                    <div class="volume-fill" id="volume-fill"></div>
+                </div>
+                
+                <div class="listening-indicator" id="listening-indicator">LISTENING...</div>
+                
+                <button class="pixel-button" id="btn-say-it">SAY IT OUT LOUD</button>
             </div>
         </section>
-    </main>
 
-    <footer>
-        <p>&copy; 2024 My Website. All rights reserved.</p>
-    </footer>
+        <!-- Outcome Screen -->
+        <section id="screen-outcome" class="screen">
+            <div class="outcome-screen">
+                <h2 style="font-size: 12px; margin-bottom: 20px; color: #ffd700;">THE MASK REFLECTS</h2>
+                
+                <div class="avatar-outcome">
+                    <div class="pixel-avatar" id="avatar-outcome">
+                        <div class="avatar-head">
+                            <div class="eye left"></div>
+                            <div class="eye right"></div>
+                        </div>
+                        <div class="avatar-body"></div>
+                        </div>
+                    </div>
 
-    <script src="script.js"></script>
+                        <div class="speech-bubble" id="speech-bubble">
+                            <p id="speech-text"></p>
+                        </div>
+
+                <button class="pixel-button" id="btn-play-again">PLAY AGAIN</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Game state
+        const gameState = {
+            trait: null,
+            currentLineIndex: 0,
+            stability: 5,
+            results: []
+        };
+
+        // Trait sentences
+        const traitSentences = {
+            Confident: [
+                "I can speak up when I need to.",
+                "My voice has value, even if others disagree.",
+                "I trust myself, even when I feel unsure."
+            ],
+            Calm: [
+                "I can stay centered when things get difficult.",
+                "My peace comes from within, not from others.",
+                "I am okay with uncertainty and change."
+            ],
+            Brave: [
+                "I face my fears even when I'm scared.",
+                "Courage means feeling afraid and doing it anyway.",
+                "I am stronger than the things that try to hold me back."
+            ],
+            Funny: [
+                "I bring lightness to heavy moments.",
+                "My humor helps me and others feel better.",
+                "I can laugh at myself and find joy in difficulty."
+            ]
+        };
+
+        // DOM elements
+        const screens = {
+            intro: document.getElementById('screen-intro'),
+            trait: document.getElementById('screen-trait'),
+            mirror: document.getElementById('screen-mirror'),
+            outcome: document.getElementById('screen-outcome')
+        };
+
+        const stabilityBar = document.getElementById('stability-bar');
+        const hearts = Array.from({ length: 5 }, (_, i) => document.getElementById(`heart-${i}`));
+        
+        const avatarPreview = document.getElementById('avatar-preview');
+        const avatarMirror = document.getElementById('avatar-mirror');
+        const avatarOutcome = document.getElementById('avatar-outcome');
+        const traitLabel = document.getElementById('trait-label');
+        const currentSentence = document.getElementById('current-sentence');
+        const lineNumber = document.getElementById('line-number');
+        const listeningIndicator = document.getElementById('listening-indicator');
+        const volumeMeter = document.getElementById('volume-meter');
+        const volumeFill = document.getElementById('volume-fill');
+        const speechText = document.getElementById('speech-text');
+
+        const btnStart = document.getElementById('btn-start');
+        const btnEnterRoom = document.getElementById('btn-enter-room');
+        const btnSayIt = document.getElementById('btn-say-it');
+        const btnPlayAgain = document.getElementById('btn-play-again');
+        const traitButtons = document.querySelectorAll('.trait-button');
+
+        // Speech recognition
+        let recognition = null;
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let dataArray = null;
+
+        // Initialize speech recognition
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+            } else {
+                alert('Speech recognition not supported in this browser. Please use Chrome or Edge.');
+            }
+        }
+
+        // Initialize audio analysis
+        async function initAudioAnalysis() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            } catch (err) {
+                console.error('Error accessing microphone:', err);
+            }
+        }
+
+        // Get volume level
+        function getVolumeLevel() {
+            if (!analyser || !dataArray) return 0;
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            return average / 255;
+        }
+
+        // Update volume meter
+        function updateVolumeMeter() {
+            if (!volumeMeter || !volumeFill) return;
+            const volume = getVolumeLevel();
+            volumeFill.style.width = (volume * 100) + '%';
+        }
+
+        // Show screen
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.classList.remove('active'));
+            screens[screenName].classList.add('active');
+            
+            if (screenName === 'mirror' || screenName === 'outcome') {
+                stabilityBar.classList.remove('hidden');
+                updateStabilityBar();
+            } else {
+                stabilityBar.classList.add('hidden');
+            }
+        }
+
+        // Update avatar based on trait
+        function updateAvatar(avatarElement, trait) {
+            if (!avatarElement || !trait) return;
+            
+            // Remove all trait classes
+            avatarElement.classList.remove('avatar-confident', 'avatar-calm', 'avatar-brave', 'avatar-funny');
+            avatarElement.classList.add(`avatar-${trait.toLowerCase()}`);
+            
+            const head = avatarElement.querySelector('.avatar-head');
+            if (!head) return;
+            
+            // Clear existing trait-specific elements
+            head.querySelectorAll('.eyebrow, .sword, .mouth').forEach(el => el.remove());
+            
+            // Add trait-specific visuals
+            if (trait === 'Confident') {
+                const leftEyebrow = document.createElement('div');
+                leftEyebrow.className = 'eyebrow left';
+                head.appendChild(leftEyebrow);
+                const rightEyebrow = document.createElement('div');
+                rightEyebrow.className = 'eyebrow right';
+                head.appendChild(rightEyebrow);
+            } else if (trait === 'Brave') {
+                const sword = document.createElement('div');
+                sword.className = 'sword';
+                avatarElement.appendChild(sword);
+            } else if (trait === 'Funny') {
+                const mouth = document.createElement('div');
+                mouth.className = 'mouth';
+                head.appendChild(mouth);
+            }
+        }
+
+        // Update stability bar
+        function updateStabilityBar() {
+            hearts.forEach((heart, index) => {
+                if (index < gameState.stability) {
+                    heart.classList.remove('empty');
+                } else {
+                    heart.classList.add('empty');
+                }
+            });
+        }
+
+        // Calculate similarity between two strings
+        function calculateSimilarity(str1, str2) {
+            const s1 = str1.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const s2 = str2.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            if (s1 === s2) return 1;
+            if (s1.length === 0 || s2.length === 0) return 0;
+            
+            // Simple word-based similarity
+            const words1 = s1.split(/\s+/);
+            const words2 = s2.split(/\s+/);
+            const allWords = new Set([...words1, ...words2]);
+            
+            let matches = 0;
+            words1.forEach(word => {
+                if (words2.some(w => w.includes(word) || word.includes(w))) {
+                    matches++;
+                }
+            });
+            
+            return matches / Math.max(words1.length, words2.length);
+        }
+
+        // Check speech against target
+        function checkSpeech(spokenText, targetText) {
+            const similarity = calculateSimilarity(spokenText, targetText);
+            return similarity >= 0.5; // 50% similarity threshold
+        }
+
+        // Record and analyze speech
+        function recordSpeech() {
+            return new Promise((resolve) => {
+                if (!recognition) {
+                    resolve({ success: false, reason: 'no-speech' });
+                    return;
+                }
+
+                const targetSentence = traitSentences[gameState.trait][gameState.currentLineIndex];
+                let speechDetected = false;
+                let volumeLow = false;
+                let silenceDetected = true;
+                let spokenText = '';
+                
+                let volumeCheckInterval = null;
+                const startTime = Date.now();
+                const maxTime = 10000; // 10 seconds max
+
+                recognition.onstart = () => {
+                    listeningIndicator.classList.add('active');
+                    volumeMeter.classList.remove('hidden');
+                    silenceDetected = true;
+                    
+                    // Check volume periodically
+                    volumeCheckInterval = setInterval(() => {
+                        updateVolumeMeter();
+                        const volume = getVolumeLevel();
+                        if (volume > 0.1) {
+                            silenceDetected = false;
+                        }
+                        if (volume < 0.15 && volume > 0) {
+                            volumeLow = true;
+                        }
+                    }, 100);
+                };
+
+                recognition.onresult = (event) => {
+                    spokenText = event.results[0][0].transcript;
+                    speechDetected = true;
+                    silenceDetected = false;
+                };
+
+                recognition.onerror = (event) => {
+                    if (event.error === 'no-speech') {
+                        silenceDetected = true;
+                    }
+                };
+
+                recognition.onend = () => {
+                    listeningIndicator.classList.remove('active');
+                    volumeMeter.classList.add('hidden');
+                    if (volumeCheckInterval) {
+                        clearInterval(volumeCheckInterval);
+                    }
+                    
+                    // Determine result
+                    let success = true;
+                    let reason = '';
+                    
+                    if (silenceDetected || !speechDetected) {
+                        success = false;
+                        reason = 'silence';
+                    } else if (volumeLow) {
+                        success = false;
+                        reason = 'volume';
+                    } else if (!checkSpeech(spokenText, targetSentence)) {
+                        success = false;
+                        reason = 'mismatch';
+                    }
+                    
+                    resolve({ success, reason, spokenText });
+                };
+
+                recognition.start();
+                
+                // Timeout fallback
+                setTimeout(() => {
+                    if (recognition && recognition.state !== 'stopped') {
+                        recognition.stop();
+                    }
+                }, maxTime);
+            });
+        }
+
+        // Process speech result
+        async function processSpeech() {
+            btnSayIt.disabled = true;
+            btnSayIt.textContent = 'LISTENING...';
+            
+            const result = await recordSpeech();
+            
+            // Update stability
+            if (!result.success) {
+                gameState.stability = Math.max(0, gameState.stability - 1);
+                updateStabilityBar();
+            }
+            
+            gameState.results.push(result);
+            
+            // Move to next line or outcome
+            gameState.currentLineIndex++;
+            
+            if (gameState.currentLineIndex < 3) {
+                updateMirrorScreen();
+                btnSayIt.disabled = false;
+                btnSayIt.textContent = 'SAY IT OUT LOUD';
+            } else {
+                showOutcomeScreen();
+            }
+        }
+
+        // Update mirror room screen
+        function updateMirrorScreen() {
+            const sentence = traitSentences[gameState.trait][gameState.currentLineIndex];
+            currentSentence.textContent = sentence;
+            lineNumber.textContent = `Line ${gameState.currentLineIndex + 1} of 3`;
+            updateAvatar(avatarMirror, gameState.trait);
+        }
+
+        // Show outcome screen
+        function showOutcomeScreen() {
+            updateAvatar(avatarOutcome, gameState.trait);
+            
+            // Apply visual state based on stability
+            if (gameState.stability <= 2) {
+                avatarOutcome.classList.add('avatar-cracked', 'avatar-glitching');
+            } else if (gameState.stability <= 3) {
+                avatarOutcome.classList.add('avatar-cracked');
+            } else {
+                avatarOutcome.classList.add('avatar-stable');
+            }
+            
+            // Generate speech text
+            let message = '';
+            if (gameState.stability <= 2) {
+                message = 'The mask cracks under the weight of unspoken words. Sometimes what we try to hold together needs to break open to let the real self breathe.';
+            } else if (gameState.stability <= 3) {
+                message = 'The mask holds, but you can see the strain. There\'s a gap between what you show and what you feel. Both are real.';
+            } else {
+                message = 'The mask stays strong. Your words match your chosen trait. But remember: even the strongest mask is still a choice, not a requirement.';
+            }
+            
+            speechText.textContent = message;
+            showScreen('outcome');
+        }
+
+        // Event listeners
+        btnStart.addEventListener('click', () => {
+            showScreen('trait');
+        });
+
+        traitButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                traitButtons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                gameState.trait = btn.dataset.trait;
+                updateAvatar(avatarPreview, gameState.trait);
+                traitLabel.textContent = `Mask: ${gameState.trait.toUpperCase()} – ${getTraitDescription(gameState.trait)}`;
+                btnEnterRoom.classList.remove('hidden');
+            });
+        });
+
+        function getTraitDescription(trait) {
+            const descriptions = {
+                Confident: 'sharp and unshaken',
+                Calm: 'steady and centered',
+                Brave: 'bold and fearless',
+                Funny: 'light and joyful'
+            };
+            return descriptions[trait] || '';
+        }
+
+        btnEnterRoom.addEventListener('click', () => {
+            if (!gameState.trait) return;
+            gameState.currentLineIndex = 0;
+            gameState.stability = 5;
+            gameState.results = [];
+            updateMirrorScreen();
+            showScreen('mirror');
+        });
+
+        btnSayIt.addEventListener('click', () => {
+            processSpeech();
+        });
+
+        btnPlayAgain.addEventListener('click', () => {
+            // Reset game state
+            gameState.trait = null;
+            gameState.currentLineIndex = 0;
+            gameState.stability = 5;
+            gameState.results = [];
+            
+            // Reset UI
+            traitButtons.forEach(b => b.classList.remove('selected'));
+            btnEnterRoom.classList.add('hidden');
+            avatarPreview.className = 'pixel-avatar';
+            avatarMirror.className = 'pixel-avatar';
+            avatarOutcome.className = 'pixel-avatar';
+            avatarOutcome.classList.remove('avatar-cracked', 'avatar-glitching', 'avatar-stable');
+            
+            showScreen('intro');
+        });
+
+        // Initialize
+        initSpeechRecognition();
+        initAudioAnalysis();
+        
+        // Update volume meter when visible
+        setInterval(() => {
+            if (!volumeMeter.classList.contains('hidden')) {
+                updateVolumeMeter();
+            }
+        }, 50);
+    </script>
 </body>
 </html>
-
